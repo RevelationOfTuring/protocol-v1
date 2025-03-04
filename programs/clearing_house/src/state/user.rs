@@ -5,7 +5,7 @@ use anchor_lang::prelude::*;
 #[derive(Default)]
 #[repr(packed)]
 pub struct User {
-    pub authority: Pubkey,
+    pub authority: Pubkey, 
     pub collateral: u128,
     pub cumulative_deposits: i128,
     pub total_fee_paid: u64,
@@ -13,7 +13,8 @@ pub struct User {
     pub total_token_discount: u128,
     pub total_referral_reward: u128,
     pub total_referee_discount: u128,
-    pub positions: Pubkey,
+    // 对应account<UserPositions>的key
+    pub positions: Pubkey, 
 
     // position settlement
     pub settled_position_value: u128,
@@ -32,14 +33,15 @@ pub struct User {
 #[derive(Default)]
 #[repr(packed)]
 pub struct UserPositions {
-    pub user: Pubkey,
+    // 对应pda<User>的key
+    pub user: Pubkey, 
     pub positions: [MarketPosition; 5],
 }
 
 // SPACE: 1040
 #[zero_copy]
 #[derive(Default)]
-#[repr(packed)]
+#[repr(packed)] // 内存采用紧凑布局。编译器会将结构体或枚举的成员紧密排列，不添加任何填充字节，从而减少内存占用。
 pub struct MarketPosition {
     pub market_index: u64,
     pub base_asset_amount: i128,

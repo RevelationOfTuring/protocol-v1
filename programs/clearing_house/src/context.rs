@@ -113,6 +113,8 @@ pub struct InitializeOrderState<'info> {
 #[derive(Accounts)]
 #[instruction(user_nonce: u8)]
 pub struct InitializeUser<'info> {
+    // 创建并初始化pda，seeds为"user" + 签名者的key
+    // 账户结构为User
     #[account(
         init,
         seeds = [b"user", authority.key.as_ref()],
@@ -121,13 +123,18 @@ pub struct InitializeUser<'info> {
         payer = authority
     )]
     pub user: Box<Account<'info, User>>,
+    // 系统的state账户
     pub state: Box<Account<'info, State>>,
+    // 初始化账户
+    // 账户结构为UserPositions
     #[account(
         init,
         payer = authority,
         space = 1072 + 8,
     )]
     pub user_positions: AccountLoader<'info, UserPositions>,
+
+    // 签名者
     #[account(mut)]
     pub authority: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,

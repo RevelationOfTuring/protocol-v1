@@ -357,6 +357,7 @@ pub mod clearing_house {
         Ok(())
     }
 
+    // 增加抵押物
     pub fn deposit_collateral(ctx: Context<DepositCollateral>, amount: u64) -> Result<()> {
         let user = &mut ctx.accounts.user;
         let clock = Clock::get()?;
@@ -2020,11 +2021,14 @@ pub mod clearing_house {
         Ok(())
     }
 
+    // 初始化pda<User>和account<UserPositions>
+    // 注：ctx.remaining_accounts可以用来传
     pub fn initialize_user(
         ctx: Context<InitializeUser>,
         _user_nonce: u8,
         optional_accounts: InitializeUserOptionalAccounts,
     ) -> Result<()> {
+        // 调用user_initialization::initialize()
         user_initialization::initialize(
             &ctx.accounts.state,
             &mut ctx.accounts.user,
@@ -2683,6 +2687,7 @@ fn valid_oracle_for_market(
     Ok(())
 }
 
+// 如果exchange进入pause状态，则返回Err。否则返回Ok
 fn exchange_not_paused(state: &Account<State>) -> Result<()> {
     if state.exchange_paused {
         return Err(ErrorCode::ExchangePaused.into());

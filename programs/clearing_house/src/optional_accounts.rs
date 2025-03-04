@@ -12,35 +12,48 @@ use spl_token::solana_program::program_pack::{IsInitialized, Pack};
 use spl_token::state::Account as TokenAccount;
 use std::slice::Iter;
 
+// 将参数accounts中包含的account info解析成TokenAccount并返回
+// 注：如果ctx.remaining_accounts传了token account的key，那么InitializeUserOptionalAccounts.whitelist_token要为true。否则将无法获得解析后的TokenAccount
 pub fn get_whitelist_token(
     optional_accounts: InitializeUserOptionalAccounts,
     accounts: &[AccountInfo],
     whitelist_mint: &Pubkey,
 ) -> ClearingHouseResult<Option<TokenAccount>> {
+    // InitializeUserOptionalAccounts.whitelist_token为false
     if !optional_accounts.whitelist_token {
+        // 表示无token account，返回Ok(None)
         return Ok(None);
     }
 
+    // 如果通过ctx.remaining_accounts传入的account数量不为1，报错
     if accounts.len() != 1 {
         return Err(ErrorCode::WhitelistTokenNotFound);
     }
+
+    // ctx.remaining_accounts传入的account就是需要的token account
     let token_account_info = &accounts[0];
 
+    // 校验ctx.remaining_accounts传入的account的owner必须是Token Program
     if token_account_info.owner != &spl_token::id() {
         return Err(ErrorCode::InvalidWhitelistToken);
     }
 
+    // 将ctx.remaining_accounts传入的account的data反序列化成TokenAccount
+    // 注：不会检查该TokenAccount是否已经初始化
     let token_account = TokenAccount::unpack_unchecked(&token_account_info.data.borrow())
         .or(Err(ErrorCode::InvalidWhitelistToken))?;
 
+    // 如果token_account未初始化，报错
     if !token_account.is_initialized() {
         return Err(ErrorCode::InvalidWhitelistToken);
     }
 
+    // 如果token_account的mint与state.whitelist_mint不一致，报错
     if !token_account.mint.eq(whitelist_mint) {
         return Err(ErrorCode::InvalidWhitelistToken);
     }
 
+    // 返回该token account
     Ok(Some(token_account))
 }
 

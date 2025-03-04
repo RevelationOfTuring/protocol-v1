@@ -5,6 +5,7 @@ use anchor_lang::prelude::*;
 #[repr(packed)]
 pub struct State {
     pub admin: Pubkey,
+    // 当前exchange是否进入暂停状态
     pub exchange_paused: bool,
     pub funding_paused: bool,
     pub admin_controls_prices: bool,
@@ -34,6 +35,7 @@ pub struct State {
     pub partial_liquidation_liquidator_share_denominator: u64,
     pub full_liquidation_liquidator_share_denominator: u64,
     pub fee_structure: FeeStructure,
+    // 白名单中的token mint的key
     pub whitelist_mint: Pubkey,
     pub discount_mint: Pubkey,
     pub oracle_guard_rails: OracleGuardRails,
