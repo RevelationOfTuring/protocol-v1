@@ -66,26 +66,37 @@ pub mod clearing_house {
         _insurance_vault_nonce: u8,
         admin_controls_prices: bool,
     ) -> Result<()> {
+        // collateral_vault账户地址（pda，seeds为[b"collateral_vault"]）
         let collateral_account_key = ctx.accounts.collateral_vault.to_account_info().key;
+        // 生成pda地址（作为collateral_vault的authority）和对应bump
+        // seeds为[collateral_account地址]
         let (collateral_account_authority, collateral_account_nonce) =
             Pubkey::find_program_address(&[collateral_account_key.as_ref()], ctx.program_id);
 
         // clearing house must be authority of collateral vault
+        // 校验collateral_vault的owner必须是collateral_account_authority，即本program掌管了collateral_vault的authority
         if ctx.accounts.collateral_vault.owner != collateral_account_authority {
             return Err(ErrorCode::InvalidCollateralAccountAuthority.into());
         }
 
+        // insurance_vault账户地址（pda，seeds为[b"insurance_vault"]）
         let insurance_account_key = ctx.accounts.insurance_vault.to_account_info().key;
+        // 生成pda地址（作为insurance_vault的authority）和对应bump
+        // seeds为[insurance_vault账户地址]
         let (insurance_account_authority, insurance_account_nonce) =
             Pubkey::find_program_address(&[insurance_account_key.as_ref()], ctx.program_id);
 
         // clearing house must be authority of insurance vault
+        // 校验insurance_vault的owner必须是insurance_account_authority，即本program掌管了insurance_vault的authority
         if ctx.accounts.insurance_vault.owner != insurance_account_authority {
             return Err(ErrorCode::InvalidInsuranceAccountAuthority.into());
         }
 
+        // 初始化Markets账户
+        // 因为Markets账户是一个AccountLoader，所以这里用load_init()
         ctx.accounts.markets.load_init()?;
 
+        // 初始化State账户
         **ctx.accounts.state = State {
             admin: *ctx.accounts.admin.key,
             funding_paused: false,

@@ -24,6 +24,7 @@ use crate::state::user_orders::{OrderTriggerCondition, OrderType, UserOrders};
 pub struct Initialize<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
+    // 1. 创建pda，用于存储State
     #[account(
         init,
         seeds = [b"clearing_house".as_ref()],
@@ -32,7 +33,9 @@ pub struct Initialize<'info> {
         payer = admin
     )]
     pub state: Box<Account<'info, State>>,
+    // 2. 抵押品mint
     pub collateral_mint: Box<Account<'info, Mint>>,
+    // 3. 创建抵押品vault（即owner为本program的一个ata，token种类为collateral_mint，authority为collateral_vault_authority）
     #[account(
         init,
         seeds = [b"collateral_vault".as_ref()],
@@ -42,8 +45,10 @@ pub struct Initialize<'info> {
         token::authority = collateral_vault_authority
     )]
     pub collateral_vault: Box<Account<'info, TokenAccount>>,
+    // 4. 抵押品vault的authority
     /// CHECK: checked in `initialize`
     pub collateral_vault_authority: AccountInfo<'info>,
+    // 5. 创建保证金Vault（即owner为本program的一个ata，token种类为collateral_mint，authority为insurance_vault_authority）
     #[account(
         init,
         seeds = [b"insurance_vault".as_ref()],
@@ -53,8 +58,10 @@ pub struct Initialize<'info> {
         token::authority = insurance_vault_authority
     )]
     pub insurance_vault: Box<Account<'info, TokenAccount>>,
+    // 6. 保证金vault的authority
     /// CHECK: checked in `initialize`
     pub insurance_vault_authority: AccountInfo<'info>,
+    // 7. markets账户
     #[account(zero)]
     pub markets: AccountLoader<'info, Markets>,
     pub rent: Sysvar<'info, Rent>,

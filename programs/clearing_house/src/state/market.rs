@@ -13,6 +13,7 @@ use switchboard_v2::decimal::SwitchboardDecimal;
 
 #[account(zero_copy)]
 #[repr(packed)]
+// markets账户里面存有最多64个Market的信息
 pub struct Markets {
     pub markets: [Market; 64],
 }
