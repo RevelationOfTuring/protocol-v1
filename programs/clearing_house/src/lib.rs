@@ -98,6 +98,7 @@ pub mod clearing_house {
 
         // 初始化State账户
         **ctx.accounts.state = State {
+            // admin为tx的signer
             admin: *ctx.accounts.admin.key,
             funding_paused: false,
             exchange_paused: false,
@@ -106,6 +107,8 @@ pub mod clearing_house {
             collateral_vault: *collateral_account_key,
             collateral_vault_authority: collateral_account_authority,
             collateral_vault_nonce: collateral_account_nonce,
+            // deposit_history/trade_history/funding_rate_history/funding_payment_history/liquidation_history/curve_history
+            // 这六个history会被设置为Pubkey的默认值，进一步的设置会在initialize_history中做
             deposit_history: Pubkey::default(),
             trade_history: Pubkey::default(),
             funding_rate_history: Pubkey::default(),
@@ -189,10 +192,14 @@ pub mod clearing_house {
         Ok(())
     }
 
+    // 初始化6个history账户，并将其key对应写入到State中
     pub fn initialize_history(ctx: Context<InitializeHistory>) -> Result<()> {
+        // State账户
         let state = &mut ctx.accounts.state;
 
         // If all of the history account keys are set to the default, assume they haven't been initialized tet
+        // 如果State中的deposit_history/trade_history/liquidation_history/funding_payment_history/funding_rate_history/curve_history都为Pubkey默认值时，
+        // 才认为history未被初始化过。如果这6个Pubkey都不是Pubkey默认值时，就会报错（表明history已经初始化过）
         if !state.deposit_history.eq(&Pubkey::default())
             && !state.trade_history.eq(&Pubkey::default())
             && !state.liquidation_history.eq(&Pubkey::default())
@@ -203,6 +210,7 @@ pub mod clearing_house {
             return Err(ErrorCode::HistoryAlreadyInitialized.into());
         }
 
+        // 初始化这6个history账户的data
         ctx.accounts.deposit_history.load_init()?;
         ctx.accounts.trade_history.load_init()?;
         ctx.accounts.funding_payment_history.load_init()?;
@@ -210,6 +218,7 @@ pub mod clearing_house {
         ctx.accounts.liquidation_history.load_init()?;
         ctx.accounts.curve_history.load_init()?;
 
+        // 获取这6个history的key
         let deposit_history = ctx.accounts.deposit_history.to_account_info().key;
         let trade_history = ctx.accounts.trade_history.to_account_info().key;
         let funding_payment_history = ctx.accounts.funding_payment_history.to_account_info().key;
@@ -217,6 +226,7 @@ pub mod clearing_house {
         let liquidation_history = ctx.accounts.liquidation_history.to_account_info().key;
         let extended_curve_history = ctx.accounts.curve_history.to_account_info().key;
 
+        // 分别存储到state的对应字段中
         state.deposit_history = *deposit_history;
         state.trade_history = *trade_history;
         state.funding_rate_history = *funding_rate_history;

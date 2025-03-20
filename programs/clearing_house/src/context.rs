@@ -22,6 +22,7 @@ use crate::state::user_orders::{OrderTriggerCondition, OrderType, UserOrders};
     insurance_vault_nonce: u8
 )]
 pub struct Initialize<'info> {
+    // 该signer会成为State中的admin
     #[account(mut)]
     pub admin: Signer<'info>,
     // 1. 创建pda，用于存储State
@@ -74,9 +75,11 @@ pub struct InitializeHistory<'info> {
     pub admin: Signer<'info>,
     #[account(
         mut,
+        // 会校验admin为本tx的signer
         has_one = admin
     )]
     pub state: Box<Account<'info, State>>,
+    // 6个history的账户（要求传入时，他们的账户内部数据都是0）
     #[account(zero)]
     pub funding_payment_history: AccountLoader<'info, FundingPaymentHistory>,
     #[account(zero)]
